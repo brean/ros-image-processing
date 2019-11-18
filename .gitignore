@@ -1,0 +1,4 @@
+*.pyc
+volumes/ros-nodes/build
+volumes/ros-nodes/devel
+volumes/ros-nodes/.catkin_workspace

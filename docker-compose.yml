@@ -1,0 +1,82 @@
+version: '3'
+
+services:
+  webserver-dev:
+    build:
+      dockerfile: Dockerfile
+      context: ./webserver-dev/
+    image: webserver-dev
+    depends_on:
+      - roscore
+    container_name: webserver-container-dev
+    ports:
+      - 8000:8000
+      - 8001:8001
+    environment:
+      LC_ALL: "C.UTF-8"
+      LANG: "C.UTF-8"
+      ROS_MASTER_URI: "${ROS_MASTER_URI}"
+      ROS_HOSTNAME: "${ROS_HOSTNAME}"
+    working_dir: "/app"
+    command: ["./run.sh"]
+    volumes:
+      - ./volumes/app:/app
+    networks:
+      - backend
+
+  roscore:
+    tty: true
+    image: "ros:${ROS_DISTRO}-ros-base"
+    command: ["roscore"]
+    environment:
+      ROS_MASTER_URI: "${ROS_MASTER_URI}"
+      ROS_HOSTNAME: "${ROS_HOSTNAME}"
+    networks:
+      ros:
+        aliases:
+          - roscore
+
+  # core web bridge
+  ros-bridge:
+    build:
+      context: ./ros-bridge
+      dockerfile: Dockerfile
+      args:
+        ROS_DISTRO: "${ROS_DISTRO}"
+    image: ros-bridge
+    depends_on:
+      - roscore
+    environment:
+      ROS_DISTRO: "${ROS_DISTRO}"
+      ROS_MASTER_URI: "${ROS_MASTER_URI}"
+      ROS_HOSTNAME: "${ROS_HOSTNAME}"
+    command: ["/opt/catkin_ws/run_ros_bridge.sh"]
+    volumes:
+      - ./volumes/ros-nodes:/opt/ros-nodes
+    ports:
+      - 9090:9090
+    networks:
+      - ros
+
+  # ros-pose-estimation:
+  #   build:
+  #     context: ./ros
+  #     dockerfile: Dockerfile
+  #     args:
+  #       ROS_DISTRO: "${ROS_DISTRO}"
+  #   image: ros-nodes
+  #   depends_on:
+  #     - roscore
+  #   environment:
+  #     ROS_DISTRO: "${ROS_DISTRO}"
+  #     ROS_MASTER_URI: "${ROS_MASTER_URI}"
+  #     ROS_HOSTNAME: "${ROS_HOSTNAME}"
+  #   command: ["/opt/ros-nodes/run_pose_estimation.sh"]
+  #   volumes:
+  #     - ./volumes/ros-nodes:/opt/ros-nodes
+  #   networks:
+  #     - ros
+
+networks:
+  ros:
+  backend:

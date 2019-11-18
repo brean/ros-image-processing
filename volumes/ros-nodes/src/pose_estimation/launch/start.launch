@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" >
+    <arg name="ssl" value="false"/>
+	</include>
+  <node name="pose_estimation" pkg="pose_estimation" type="pose_estimation.py" output="screen"/>
+</launch>
